@@ -708,9 +708,11 @@ select:focus {
     margin-top: 2rem;
 }
 
-.action-buttons .custom-btn {
+.action-buttons .back-btn,
+.action-buttons .custom-btn,
+.action-buttons .color-btn {
     flex: 1;
-    max-width: 300px;
+    max-width: 200px;
 }
 
 .custom-btn {
@@ -730,6 +732,34 @@ select:focus {
     background: #7c3aed;
     transform: translateY(-2px);
     box-shadow: var(--shadow-lg);
+}
+
+.color-btn {
+    padding: 1rem 2rem;
+    background: #10b981;
+    color: white;
+    border: none;
+    border-radius: 12px;
+    font-size: 1.1rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    box-shadow: var(--shadow-md);
+}
+
+.color-btn:hover {
+    background: #059669;
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-lg);
+}
+
+.color-btn.active {
+    background: #ef4444;
+    box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.3);
+}
+
+.color-btn.active:hover {
+    background: #dc2626;
 }
 
 .custom-modal {
@@ -893,4 +923,12 @@ textarea[placeholder*="선: 선하게 빛나는 당신의 눈빛"] {
 .phrase-display .phrase-line-5 { color: #ec4899 !important; font-weight: 600; } /* 분홍 */
 .phrase-display .phrase-line-6 { color: #06b6d4 !important; font-weight: 600; } /* 하늘색 */
 .phrase-display .phrase-line-7 { color: #84cc16 !important; font-weight: 600; } /* 라임 */
-.phrase-display .phrase-line-8 { color: #f97316 !important; font-weight: 600; } /* 오렌지 */ 
+.phrase-display .phrase-line-8 { color: #f97316 !important; font-weight: 600; } /* 오렌지 */
+
+@media (max-width: 768px) {
+    .action-buttons .back-btn,
+    .action-buttons .custom-btn,
+    .action-buttons .color-btn {
+        width: 100%;
+    }
+} 

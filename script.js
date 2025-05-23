@@ -1,5 +1,8 @@
 let openai;
 
+// 색상 모드 전역 변수
+let isColorMode = false;
+
 // OpenAI 초기화 함수
 async function initializeOpenAI(apiKey) {
     console.log('Starting OpenAI initialization...');
@@ -86,6 +89,7 @@ function setupEventListeners() {
     const customTextForm = document.getElementById('customTextForm');
     const closeCustomModal = document.getElementById('closeCustomModal');
     const cancelCustomText = document.getElementById('cancelCustomText');
+    const colorToggleBtn = document.getElementById('colorToggleBtn');
 
     // 1단계: API 키 입력 폼 제출
     apiKeyForm.addEventListener('submit', async (e) => {
@@ -262,6 +266,21 @@ function setupEventListeners() {
         
         // 커스텀 텍스트로 캘리그라피 생성
         await generateCustomCalligraphy(customText);
+    });
+
+    // 색상 토글 버튼 클릭 이벤트
+    colorToggleBtn.addEventListener('click', () => {
+        isColorMode = !isColorMode;
+        
+        if (isColorMode) {
+            colorToggleBtn.textContent = '색상해제하기';
+            colorToggleBtn.classList.add('active');
+        } else {
+            colorToggleBtn.textContent = '색상적용하기';
+            colorToggleBtn.classList.remove('active');
+        }
+        
+        console.log('Color mode toggled:', isColorMode);
     });
 
     // 이름 입력 필드에 이벤트 리스너 추가 (동적 버튼 텍스트 및 글자 수 체크)
@@ -728,16 +747,16 @@ async function generateCalligraphy(phrase) {
         try {
             // 각 스타일별 캘리그라피 생성
             updateLoadingStep(1);
-            const traditionalCanvas = await createCalligraphyCanvas(phrase.content, 'traditional');
+            const traditionalCanvas = await createCalligraphyCanvas(phrase.content, 'traditional', isColorMode);
             
             updateLoadingStep(2);
-            const modernCanvas = await createCalligraphyCanvas(phrase.content, 'modern');
+            const modernCanvas = await createCalligraphyCanvas(phrase.content, 'modern', isColorMode);
             
             updateLoadingStep(3);
-            const elegantCanvas = await createCalligraphyCanvas(phrase.content, 'elegant');
+            const elegantCanvas = await createCalligraphyCanvas(phrase.content, 'elegant', isColorMode);
             
             updateLoadingStep(4);
-            const classicCanvas = await createCalligraphyCanvas(phrase.content, 'classic');
+            const classicCanvas = await createCalligraphyCanvas(phrase.content, 'classic', isColorMode);
 
             // 완료 단계 표시
             updateLoadingStep(5);
@@ -806,7 +825,7 @@ function updateLoadingStep(step) {
 }
 
 // 캔버스 기반 붓글씨 생성 함수
-async function createCalligraphyCanvas(text, style) {
+async function createCalligraphyCanvas(text, style, isColorMode) {
     return new Promise((resolve) => {
         const canvas = document.createElement('canvas');
         const ctx = canvas.getContext('2d');
@@ -899,25 +918,20 @@ async function createCalligraphyCanvas(text, style) {
             }
             ctx.textAlign = 'center';
             ctx.textBaseline = 'middle';
-            // 스타일에 따른 색상 설정
-            switch(style) {
-                case 'traditional':
-                    ctx.fillStyle = '#000000';
-                    ctx.strokeStyle = '#000000';
-                    break;
-                case 'modern':
-                    ctx.fillStyle = '#333333';
-                    ctx.strokeStyle = '#333333';
-                    break;
-                case 'elegant':
-                    ctx.fillStyle = '#2c3e50';
-                    ctx.strokeStyle = '#2c3e50';
-                    break;
-                case 'classic':
-                    ctx.fillStyle = '#1a1a1a';
-                    ctx.strokeStyle = '#1a1a1a';
-                    break;
-            }
+            
+            // 색상 팔레트 정의
+            const colorPalette = [
+                '#e11d48', // 진한 분홍
+                '#f59e0b', // 주황
+                '#10b981', // 초록
+                '#3b82f6', // 파랑
+                '#8b5cf6', // 보라
+                '#ec4899', // 분홍
+                '#06b6d4', // 하늘색
+                '#84cc16', // 라임
+                '#f97316'  // 오렌지
+            ];
+            
             // 텍스트를 줄바꿈으로 분리하고 숫자/첫글자/콜론 제거
             const lines = text.split('\n')
                 .filter(line => line.trim())
@@ -943,30 +957,62 @@ async function createCalligraphyCanvas(text, style) {
 
             processedLines.forEach((line, index) => {
                 const y = startY + index * lineHeight + lineHeight / 2;
+                
+                // 색상 모드에 따른 색상 설정
+                if (isColorMode) {
+                    const colorIndex = index % colorPalette.length;
+                    ctx.fillStyle = colorPalette[colorIndex];
+                    ctx.strokeStyle = colorPalette[colorIndex];
+                } else {
+                    // 스타일에 따른 기본 색상 설정
+                    switch(style) {
+                        case 'traditional':
+                            ctx.fillStyle = '#000000';
+                            ctx.strokeStyle = '#000000';
+                            break;
+                        case 'modern':
+                            ctx.fillStyle = '#333333';
+                            ctx.strokeStyle = '#333333';
+                            break;
+                        case 'elegant':
+                            ctx.fillStyle = '#2c3e50';
+                            ctx.strokeStyle = '#2c3e50';
+                            break;
+                        case 'classic':
+                            ctx.fillStyle = '#1a1a1a';
+                            ctx.strokeStyle = '#1a1a1a';
+                            break;
+                    }
+                }
+                
                 switch(style) {
                     case 'traditional':
-                        ctx.fillStyle = 'rgba(0, 0, 0, 0.15)';
-                        ctx.fillText(line, canvas.width/2 + 4, y + 4);
-                        ctx.fillStyle = '#000000';
+                        if (!isColorMode) {
+                            ctx.fillStyle = 'rgba(0, 0, 0, 0.15)';
+                            ctx.fillText(line, canvas.width/2 + 4, y + 4);
+                        }
                         ctx.fillText(line, canvas.width/2, y);
                         addBrushEffect(ctx, line, canvas.width/2, y, fontSize);
                         break;
                     case 'modern':
-                        const gradient = ctx.createLinearGradient(0, y - fontSize/2, 0, y + fontSize/2);
-                        gradient.addColorStop(0, '#333333');
-                        gradient.addColorStop(1, '#666666');
-                        ctx.fillStyle = gradient;
+                        if (!isColorMode) {
+                            const gradient = ctx.createLinearGradient(0, y - fontSize/2, 0, y + fontSize/2);
+                            gradient.addColorStop(0, '#333333');
+                            gradient.addColorStop(1, '#666666');
+                            ctx.fillStyle = gradient;
+                        }
                         ctx.fillText(line, canvas.width/2, y);
                         break;
                     case 'elegant':
-                        ctx.fillStyle = 'rgba(44, 62, 80, 0.1)';
-                        ctx.fillText(line, canvas.width/2 + 3, y + 3);
-                        ctx.fillStyle = '#2c3e50';
+                        if (!isColorMode) {
+                            ctx.fillStyle = 'rgba(44, 62, 80, 0.1)';
+                            ctx.fillText(line, canvas.width/2 + 3, y + 3);
+                            ctx.fillStyle = '#2c3e50';
+                        }
                         ctx.fillText(line, canvas.width/2, y);
                         addSmoothBrushEffect(ctx, line, canvas.width/2, y, fontSize);
                         break;
                     case 'classic':
-                        ctx.fillStyle = '#1a1a1a';
                         ctx.fillText(line, canvas.width/2, y);
                         break;
                 }
@@ -1207,16 +1253,16 @@ async function generateCustomCalligraphy(inputText) {
         try {
             // 각 스타일별 캘리그라피 생성
             updateLoadingStep(1);
-            const traditionalCanvas = await createCalligraphyCanvas(formattedText, 'traditional');
+            const traditionalCanvas = await createCalligraphyCanvas(formattedText, 'traditional', isColorMode);
             
             updateLoadingStep(2);
-            const modernCanvas = await createCalligraphyCanvas(formattedText, 'modern');
+            const modernCanvas = await createCalligraphyCanvas(formattedText, 'modern', isColorMode);
             
             updateLoadingStep(3);
-            const elegantCanvas = await createCalligraphyCanvas(formattedText, 'elegant');
+            const elegantCanvas = await createCalligraphyCanvas(formattedText, 'elegant', isColorMode);
             
             updateLoadingStep(4);
-            const classicCanvas = await createCalligraphyCanvas(formattedText, 'classic');
+            const classicCanvas = await createCalligraphyCanvas(formattedText, 'classic', isColorMode);
 
             // 완료 단계 표시
             updateLoadingStep(5);
