@@ -257,6 +257,32 @@ function setupEventListeners() {
         // 커스텀 텍스트로 캘리그라피 생성
         await generateCustomCalligraphy(customText);
     });
+
+    // 이름 입력 필드에 이벤트 리스너 추가 (동적 버튼 텍스트)
+    document.getElementById('name').addEventListener('input', function() {
+        const name = this.value.trim();
+        const createBtn = document.getElementById('createBtn');
+        const language = document.getElementById('language').value;
+        
+        if (name) {
+            const nameLength = name.length;
+            if (language === 'ko') {
+                createBtn.textContent = `${nameLength}행시 생성하기`;
+            } else if (language === 'en') {
+                createBtn.textContent = `Generate ${nameLength}-line poem`;
+            } else {
+                createBtn.textContent = `Generar poema de ${nameLength} líneas`;
+            }
+        } else {
+            createBtn.textContent = '추천문구 생성하기';
+        }
+    });
+
+    // 언어 변경 시에도 버튼 텍스트 업데이트
+    document.getElementById('language').addEventListener('change', function() {
+        const nameInput = document.getElementById('name');
+        nameInput.dispatchEvent(new Event('input'));
+    });
 }
 
 // ChatGPT를 사용한 문구 생성 함수
@@ -273,8 +299,8 @@ async function generatePhrases(name, mood, language) {
 
         let systemPrompt;
         if (language === 'ko') {
-            systemPrompt = `You are a creative poet specializing in 삼행시 (Korean word play poetry).
-            Create exactly 4 different 삼행시 using the given name where each line MUST start with the exact letter from the name.
+            systemPrompt = `You are a creative poet specializing in Korean acrostic poetry (행시).
+            Create exactly 4 different ${nameLength}행시 using the given name where each line MUST start with the exact letter from the name.
             
             Rules for Korean (ko):
             1. Each line MUST start with the EXACT letter from the name
@@ -287,6 +313,7 @@ async function generatePhrases(name, mood, language) {
             8. Separate each version with a blank line
             9. Each version MUST start with a number (1, 2, 3, or 4)
             10. Each line MUST start with the letter followed by a colon (:)
+            11. You must create exactly ${nameLength} lines for each version (one for each letter in the name)
             
             Example for Korean (if name is "김철수" and mood is "감동적인"):
             1
@@ -322,31 +349,63 @@ async function generatePhrases(name, mood, language) {
             7. Separate each version with a blank line
             8. Each version MUST start with a number (1, 2, 3, or 4)
             9. Each line MUST start with the letter followed by a colon (:)
+            10. You must create exactly ${nameLength} lines for each version (one for each letter in the name)
             
-            Example for English (if name is "John" and mood is "romantic"):
-            1
-            J: Joy fills my heart when I see you
-            O: Our love story is like a beautiful dream
-            H: Happiness surrounds us every day
-            N: Never-ending love is what we share
+            ${language === 'en' ? 
+                `Example for English (if name is "JOHN" and mood is "romantic"):
+                1
+                J: Joy fills my heart when I see you
+                O: Our love story is like a beautiful dream
+                H: Happiness surrounds us every day
+                N: Never-ending love is what we share
 
-            2
-            J: Journey of love begins with you
-            O: Only you make my heart skip a beat
-            H: Holding hands under the moonlight
-            N: Never want to let you go
+                2
+                J: Journey of love begins with you
+                O: Only you make my heart skip a beat
+                H: Holding hands under the moonlight
+                N: Never want to let you go
 
-            3
-            J: Just the thought of you makes me smile
-            O: Our hearts beat as one
-            H: Heaven is being with you
-            N: Nothing compares to your love
+                3
+                J: Just the thought of you makes me smile
+                O: Our hearts beat as one
+                H: Heaven is being with you
+                N: Nothing compares to your love
 
-            4
-            J: Joyful moments we share together
-            O: Our love grows stronger each day
-            H: Happiness is being with you
-            N: Never-ending love story we write`;
+                4
+                J: Joyful moments we share together
+                O: Our love grows stronger each day
+                H: Happiness is being with you
+                N: Never-ending love story we write` :
+                
+                `Example for Spanish (if name is "MARIA" and mood is "romántico"):
+                1
+                M: Mi corazón late fuerte cuando te veo
+                A: Amor verdadero es lo que siento
+                R: Rosas rojas no comparan con tu belleza
+                I: Infinito es mi amor por ti
+                A: Alma mía, siempre estarás conmigo
+
+                2
+                M: Mariposas danzan en mi estómago
+                A: Abrazos tuyos me dan paz
+                R: Rayos de sol brillan en tus ojos
+                I: Ilusiones se hacen realidad contigo
+                A: Amarte es mi mayor felicidad
+
+                3
+                M: Melodías dulces canta mi corazón
+                A: Ángel eres tú en mi vida
+                R: Románticos momentos compartimos
+                I: Inolvidables son nuestros recuerdos
+                A: Amor eterno te prometo
+
+                4
+                M: Manos entrelazadas caminamos juntos
+                A: Aventuras esperan por nosotros
+                R: Riendo bajo las estrellas
+                I: Inspiración eres para mi alma
+                A: Amándote hasta el final de los tiempos`
+            }`
         }
 
         const response = await openai.createChatCompletion({
@@ -485,7 +544,9 @@ async function generatePhrases(name, mood, language) {
         });
 
         return phrases.map((phrase, index) => ({
-            text: `${name}님의 ${mood} ${language === 'ko' ? '삼행시' : language === 'en' ? 'poem' : 'poema'}`,
+            text: language === 'ko' ? `${name}님의 ${mood} ${nameLength}행시` : 
+                  language === 'en' ? `${name}'s ${mood} ${nameLength}-line poem` :
+                  `Poema de ${nameLength} líneas ${mood} para ${name}`,
             content: phrase,
             id: index + 1
         }));
