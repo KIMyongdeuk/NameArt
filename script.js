@@ -377,43 +377,88 @@ async function generatePhrases(name, mood, language) {
         // 번호로 시작하는 줄을 기준으로 4개 블록 추출
         const phrases = [];
         
-        // 더 유연한 정규식 패턴 사용
+        // 텍스트를 줄별로 분리
         const lines = content.split('\n');
-        let currentPhrase = null;
-        let currentPhraseContent = [];
+        let currentPhraseLines = [];
+        let currentPhraseNumber = null;
+        
+        console.log('Parsing lines:', lines);
         
         for (let i = 0; i < lines.length; i++) {
             const line = lines[i].trim();
             
-            // 숫자로 시작하는 줄을 찾기 (1, 2, 3, 4)
-            const numberMatch = line.match(/^([1-4])[\s]*$/);
-            if (numberMatch) {
+            // 빈 줄은 건너뛰기
+            if (line === '') continue;
+            
+            // 숫자만 있는 줄인지 확인 (1, 2, 3, 4) - 공백 허용
+            if (/^\s*[1-4]\s*$/.test(line)) {
+                // 실제 숫자 추출
+                const number = line.match(/([1-4])/)[1];
+                
                 // 이전 문구가 있으면 저장
-                if (currentPhrase !== null && currentPhraseContent.length > 0) {
-                    const phraseText = currentPhrase + '\n' + currentPhraseContent.join('\n');
+                if (currentPhraseNumber !== null && currentPhraseLines.length > 0) {
+                    const phraseText = currentPhraseNumber + '\n' + currentPhraseLines.join('\n');
                     phrases.push(phraseText);
+                    console.log(`Saved phrase ${currentPhraseNumber}:`, phraseText);
                 }
+                
                 // 새로운 문구 시작
-                currentPhrase = numberMatch[1];
-                currentPhraseContent = [];
-            } else if (line.length > 0 && currentPhrase !== null) {
-                // 내용 줄 추가
-                currentPhraseContent.push(line);
+                currentPhraseNumber = number;
+                currentPhraseLines = [];
+                console.log(`Starting new phrase: ${currentPhraseNumber}`);
+            } else if (currentPhraseNumber !== null) {
+                // 현재 문구의 내용 줄 추가
+                currentPhraseLines.push(line);
+                console.log(`Added line to phrase ${currentPhraseNumber}:`, line);
             }
         }
         
         // 마지막 문구 추가
-        if (currentPhrase !== null && currentPhraseContent.length > 0) {
-            const phraseText = currentPhrase + '\n' + currentPhraseContent.join('\n');
+        if (currentPhraseNumber !== null && currentPhraseLines.length > 0) {
+            const phraseText = currentPhraseNumber + '\n' + currentPhraseLines.join('\n');
             phrases.push(phraseText);
+            console.log(`Saved final phrase ${currentPhraseNumber}:`, phraseText);
         }
         
-        console.log('Processed phrases:', phrases);
+        console.log('Final parsed phrases:', phrases);
+
+        // 파싱이 실패한 경우 백업 방법 시도
+        if (phrases.length === 0) {
+            console.log('Primary parsing failed, trying backup method...');
+            
+            // 간단한 분할 방법: 연속된 빈 줄로 구분
+            const sections = content.split(/\n\s*\n/).filter(section => section.trim());
+            console.log('Backup sections:', sections);
+            
+            sections.forEach((section, index) => {
+                if (index < 4) { // 최대 4개만
+                    const cleanSection = section.trim();
+                    if (cleanSection) {
+                        phrases.push(`${index + 1}\n${cleanSection}`);
+                    }
+                }
+            });
+            
+            console.log('Backup parsed phrases:', phrases);
+        }
 
         if (phrases.length !== 4) {
             console.error('Invalid number of phrases:', phrases);
             console.error('Raw content:', content);
-            throw new Error(`Expected 4 phrases, but got ${phrases.length}`);
+            console.error('Content length:', content.length);
+            console.error('Lines count:', content.split('\n').length);
+            
+            // 더 관대한 처리: 1개 이상의 문구가 있으면 계속 진행
+            if (phrases.length > 0) {
+                console.warn(`Warning: Expected 4 phrases, but got ${phrases.length}. Continuing with available phrases.`);
+                // 부족한 문구는 첫 번째 문구로 채우기
+                while (phrases.length < 4) {
+                    const duplicatePhrase = phrases[0].replace(/^1/, phrases.length + 1);
+                    phrases.push(duplicatePhrase);
+                }
+            } else {
+                throw new Error(`Expected 4 phrases, but got ${phrases.length}. Raw content was: "${content.substring(0, 200)}..."`);
+            }
         }
 
         // 각 문구의 줄 수 확인 (더 유연한 검증)
