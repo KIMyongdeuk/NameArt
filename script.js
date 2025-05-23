@@ -646,14 +646,29 @@ function displayPhrases(phrases) {
                 const colorClass = `phrase-line-${colorIndex}`;
                 console.log(`Applying color class ${colorClass} to line ${index}: "${line}"`);
                 
+                // 색상 매핑 - 인라인 스타일로도 적용
+                const colors = [
+                    '#e11d48', // 진한 분홍
+                    '#f59e0b', // 주황
+                    '#10b981', // 초록
+                    '#3b82f6', // 파랑
+                    '#8b5cf6', // 보라
+                    '#ec4899', // 분홍
+                    '#06b6d4', // 하늘색
+                    '#84cc16', // 라임
+                    '#f97316'  // 오렌지
+                ];
+                
+                const inlineStyle = `color: ${colors[colorIndex]} !important; font-weight: 600 !important; margin: 0.5rem 0; font-size: 1.1rem;`;
+                
                 // 20글자가 넘는 경우 두 줄로 나누기
                 if (line.length > 20) {
                     const halfLength = Math.ceil(line.length / 2);
                     const firstLine = line.slice(0, halfLength);
                     const secondLine = line.slice(halfLength);
-                    return `<p class="${colorClass}">${firstLine}</p><p class="${colorClass}">${secondLine}</p>`;
+                    return `<p class="${colorClass}" style="${inlineStyle}">${firstLine}</p><p class="${colorClass}" style="${inlineStyle}">${secondLine}</p>`;
                 }
-                return `<p class="${colorClass}">${line}</p>`;
+                return `<p class="${colorClass}" style="${inlineStyle}">${line}</p>`;
             })
             .join('');
         
@@ -1327,7 +1342,23 @@ function formatTextWithColors(text) {
             // 각 줄에 색상 클래스 적용 (색상은 순환)
             const colorIndex = index % 9; // 9가지 색상 순환
             const colorClass = `phrase-line-${colorIndex}`;
-            return `<p class="${colorClass}" style="margin: 0.5rem 0; font-size: 1.1rem;">${line}</p>`;
+            
+            // 색상 매핑 - 인라인 스타일로도 적용
+            const colors = [
+                '#e11d48', // 진한 분홍
+                '#f59e0b', // 주황
+                '#10b981', // 초록
+                '#3b82f6', // 파랑
+                '#8b5cf6', // 보라
+                '#ec4899', // 분홍
+                '#06b6d4', // 하늘색
+                '#84cc16', // 라임
+                '#f97316'  // 오렌지
+            ];
+            
+            const inlineStyle = `color: ${colors[colorIndex]} !important; font-weight: 600 !important; margin: 0.5rem 0; font-size: 1.1rem;`;
+            
+            return `<p class="${colorClass}" style="${inlineStyle}">${line}</p>`;
         })
         .join('');
 }
