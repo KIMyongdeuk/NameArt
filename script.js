@@ -34,6 +34,12 @@ document.addEventListener('DOMContentLoaded', async () => {
     await checkFontLoading();
     
     setupEventListeners();
+    
+    // 초기 언어 설정에 따른 글자 수 제한 적용
+    const languageSelect = document.getElementById('language');
+    if (languageSelect) {
+        languageSelect.dispatchEvent(new Event('change'));
+    }
 });
 
 // 폰트 로딩 확인 함수
@@ -258,12 +264,36 @@ function setupEventListeners() {
         await generateCustomCalligraphy(customText);
     });
 
-    // 이름 입력 필드에 이벤트 리스너 추가 (동적 버튼 텍스트)
+    // 이름 입력 필드에 이벤트 리스너 추가 (동적 버튼 텍스트 및 글자 수 체크)
     document.getElementById('name').addEventListener('input', function() {
         const name = this.value.trim();
         const createBtn = document.getElementById('createBtn');
         const language = document.getElementById('language').value;
+        const nameLimit = document.getElementById('nameLimit');
         
+        // 현재 글자 수와 최대 글자 수 확인
+        const currentLength = name.length;
+        const maxLength = this.maxLength;
+        
+        // 글자 수 표시 업데이트
+        if (language === 'ko') {
+            nameLimit.textContent = `한글: ${currentLength}/${maxLength}글자`;
+        } else if (language === 'en') {
+            nameLimit.textContent = `영어: ${currentLength}/${maxLength}글자`;
+        } else {
+            nameLimit.textContent = `스페인어: ${currentLength}/${maxLength}글자`;
+        }
+        
+        // 글자 수가 제한에 근접하면 색상 변경
+        if (currentLength >= maxLength) {
+            nameLimit.style.color = '#ef4444'; // 빨간색
+        } else if (currentLength >= maxLength - 1) {
+            nameLimit.style.color = '#f59e0b'; // 주황색
+        } else {
+            nameLimit.style.color = '#64748b'; // 기본 회색
+        }
+        
+        // 버튼 텍스트 업데이트
         if (name) {
             const nameLength = name.length;
             if (language === 'ko') {
@@ -278,9 +308,27 @@ function setupEventListeners() {
         }
     });
 
-    // 언어 변경 시에도 버튼 텍스트 업데이트
+    // 언어 변경 시에도 버튼 텍스트 업데이트 및 글자 수 제한 조정
     document.getElementById('language').addEventListener('change', function() {
         const nameInput = document.getElementById('name');
+        const language = this.value;
+        const nameLimit = document.getElementById('nameLimit');
+        
+        // 언어에 따른 글자 수 제한 설정
+        if (language === 'ko') {
+            nameInput.maxLength = 5;
+            nameLimit.textContent = '한글: 최대 5글자';
+        } else {
+            nameInput.maxLength = 9;
+            nameLimit.textContent = language === 'en' ? '영어: 최대 9글자' : '스페인어: 최대 9글자';
+        }
+        
+        // 현재 입력된 텍스트가 새로운 제한을 초과하는지 확인
+        if (nameInput.value.length > nameInput.maxLength) {
+            nameInput.value = nameInput.value.substring(0, nameInput.maxLength);
+        }
+        
+        // 버튼 텍스트 업데이트
         nameInput.dispatchEvent(new Event('input'));
     });
 }

@@ -59,7 +59,10 @@
                 <form id="nameForm">
                     <div class="form-group">
                         <label for="name">이름을 입력하세요:</label>
-                        <input type="text" id="name" name="name" required>
+                        <input type="text" id="name" name="name" maxlength="5" required>
+                        <small id="nameLimit" style="color: #64748b; margin-top: 0.5rem; display: block;">
+                            한글: 최대 5글자, 영어/스페인어: 최대 9글자
+                        </small>
                     </div>
 
                     <div class="form-group">
