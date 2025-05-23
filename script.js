@@ -376,13 +376,38 @@ async function generatePhrases(name, mood, language) {
 
         // 번호로 시작하는 줄을 기준으로 4개 블록 추출
         const phrases = [];
-        const regex = /\n?([1-4])\n([\s\S]*?)(?=\n[1-4]\n|$)/g;
-        let match;
-        while ((match = regex.exec(content)) !== null) {
-            // match[2]는 각 삼행시 본문
-            const phrase = match[1] + '\n' + match[2].trim();
-            phrases.push(phrase);
+        
+        // 더 유연한 정규식 패턴 사용
+        const lines = content.split('\n');
+        let currentPhrase = null;
+        let currentPhraseContent = [];
+        
+        for (let i = 0; i < lines.length; i++) {
+            const line = lines[i].trim();
+            
+            // 숫자로 시작하는 줄을 찾기 (1, 2, 3, 4)
+            const numberMatch = line.match(/^([1-4])[\s]*$/);
+            if (numberMatch) {
+                // 이전 문구가 있으면 저장
+                if (currentPhrase !== null && currentPhraseContent.length > 0) {
+                    const phraseText = currentPhrase + '\n' + currentPhraseContent.join('\n');
+                    phrases.push(phraseText);
+                }
+                // 새로운 문구 시작
+                currentPhrase = numberMatch[1];
+                currentPhraseContent = [];
+            } else if (line.length > 0 && currentPhrase !== null) {
+                // 내용 줄 추가
+                currentPhraseContent.push(line);
+            }
         }
+        
+        // 마지막 문구 추가
+        if (currentPhrase !== null && currentPhraseContent.length > 0) {
+            const phraseText = currentPhrase + '\n' + currentPhraseContent.join('\n');
+            phrases.push(phraseText);
+        }
+        
         console.log('Processed phrases:', phrases);
 
         if (phrases.length !== 4) {
@@ -391,11 +416,26 @@ async function generatePhrases(name, mood, language) {
             throw new Error(`Expected 4 phrases, but got ${phrases.length}`);
         }
 
-        // 각 문구의 줄 수 확인
+        // 각 문구의 줄 수 확인 (더 유연한 검증)
         phrases.forEach((phrase, index) => {
             const lines = phrase.split('\n').filter(line => line.trim());
-            if (lines.length !== nameLength + 1) { // +1 for the number line
-                throw new Error(`Phrase ${index + 1} has ${lines.length - 1} lines, but should have ${nameLength} lines`);
+            const contentLines = lines.slice(1); // 첫 번째 줄(숫자)을 제외한 내용 줄들
+            
+            // 이름의 각 글자로 시작하는 줄의 개수가 이름 길이와 일치하는지 확인
+            const nameStartingLines = contentLines.filter(line => {
+                const trimmedLine = line.trim();
+                // 이름의 각 글자로 시작하는지 확인 (콜론 포함)
+                for (let i = 0; i < nameLength; i++) {
+                    if (trimmedLine.startsWith(name[i] + ':') || trimmedLine.startsWith(name[i] + '：')) {
+                        return true;
+                    }
+                }
+                return false;
+            });
+            
+            if (nameStartingLines.length < nameLength) {
+                console.warn(`Phrase ${index + 1} may be incomplete. Expected ${nameLength} lines starting with name characters, but found ${nameStartingLines.length}`);
+                // 경고만 출력하고 계속 진행 (완전히 실패시키지 않음)
             }
         });
 
@@ -439,8 +479,12 @@ function displayPhrases(phrases) {
         const formattedContent = phrase.content
             .split('\n')
             .filter(line => line.trim())
-            .map(line => line.replace(/^\d+\s*/, '').trim()) // 숫자 제거
-            .map(line => line.replace(/^(.)(:|：)\s*/, '')) // 첫 글자와 : 제거
+            .map(line => line.replace(/^\d+\s*/, '').trim()) // 숫자와 공백 제거
+            .map(line => {
+                // 첫 글자와 콜론 제거 (한국어/영어 콜론 모두 처리)
+                const cleaned = line.replace(/^(.)(:|：)\s*/, '').trim();
+                return cleaned;
+            })
             .filter(line => line.length > 0) // 빈 줄 제거
             .map(line => {
                 // 20글자가 넘는 경우 두 줄로 나누기
