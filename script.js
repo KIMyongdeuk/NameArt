@@ -644,6 +644,7 @@ function displayPhrases(phrases) {
                 // 각 줄에 색상 클래스 적용 (색상은 순환)
                 const colorIndex = index % 9; // 9가지 색상 순환
                 const colorClass = `phrase-line-${colorIndex}`;
+                console.log(`Applying color class ${colorClass} to line ${index}: "${line}"`);
                 
                 // 20글자가 넘는 경우 두 줄로 나누기
                 if (line.length > 20) {
