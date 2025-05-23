@@ -640,15 +640,19 @@ function displayPhrases(phrases) {
                 return cleaned;
             })
             .filter(line => line.length > 0) // 빈 줄 제거
-            .map(line => {
+            .map((line, index) => {
+                // 각 줄에 색상 클래스 적용 (색상은 순환)
+                const colorIndex = index % 9; // 9가지 색상 순환
+                const colorClass = `phrase-line-${colorIndex}`;
+                
                 // 20글자가 넘는 경우 두 줄로 나누기
                 if (line.length > 20) {
                     const halfLength = Math.ceil(line.length / 2);
                     const firstLine = line.slice(0, halfLength);
                     const secondLine = line.slice(halfLength);
-                    return `<p>${firstLine}</p><p>${secondLine}</p>`;
+                    return `<p class="${colorClass}">${firstLine}</p><p class="${colorClass}">${secondLine}</p>`;
                 }
-                return `<p>${line}</p>`;
+                return `<p class="${colorClass}">${line}</p>`;
             })
             .join('');
         
@@ -755,7 +759,7 @@ async function generateCalligraphy(phrase) {
                         <button class="download-btn" onclick="downloadCanvas('${classicCanvas.toDataURL()}', 'classic-calligraphy')">이미지 저장하기</button>
                     </div>
                 </div>
-                <p class="calligraphy-text">${phrase.content.split('\n').filter(line => line.trim()).map(line => line.replace(/^\d+\s*/, '').trim()).join('<br>')}</p>
+                <div class="phrase-display">${formatTextWithColors(phrase.content)}</div>
             `;
 
         } catch (error) {
@@ -1234,7 +1238,7 @@ async function generateCustomCalligraphy(inputText) {
                         <button class="download-btn" onclick="downloadCanvas('${classicCanvas.toDataURL()}', 'custom-classic-calligraphy')">이미지 저장하기</button>
                     </div>
                 </div>
-                <p class="calligraphy-text">${lines.join('<br>')}</p>
+                <div class="phrase-display">${formatTextWithColors(formattedText)}</div>
             `;
 
         } catch (error) {
@@ -1306,4 +1310,23 @@ function showStep2() {
     setTimeout(() => {
         document.getElementById('name').focus();
     }, 300);
+}
+
+function formatTextWithColors(text) {
+    return text.split('\n')
+        .filter(line => line.trim())
+        .map(line => line.replace(/^\d+\s*/, '').trim()) // 숫자와 공백 제거
+        .map(line => {
+            // 첫 글자와 콜론 제거 (한국어/영어 콜론 모두 처리)
+            const cleaned = line.replace(/^(.)(:|：)\s*/, '').trim();
+            return cleaned;
+        })
+        .filter(line => line.length > 0) // 빈 줄 제거
+        .map((line, index) => {
+            // 각 줄에 색상 클래스 적용 (색상은 순환)
+            const colorIndex = index % 9; // 9가지 색상 순환
+            const colorClass = `phrase-line-${colorIndex}`;
+            return `<p class="${colorClass}" style="margin: 0.5rem 0; font-size: 1.1rem;">${line}</p>`;
+        })
+        .join('');
 }

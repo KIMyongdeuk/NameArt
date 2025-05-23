@@ -279,6 +279,25 @@ select:focus {
 .phrase-content p:last-child {
     color: #10b981;
     font-weight: 700;
+    border-bottom: none;
+}
+
+/* 추천문구 색상 팔레트 */
+.phrase-line-0 { color: #e11d48; font-weight: 600; } /* 진한 분홍 */
+.phrase-line-1 { color: #f59e0b; font-weight: 600; } /* 주황 */
+.phrase-line-2 { color: #10b981; font-weight: 600; } /* 초록 */
+.phrase-line-3 { color: #3b82f6; font-weight: 600; } /* 파랑 */
+.phrase-line-4 { color: #8b5cf6; font-weight: 600; } /* 보라 */
+.phrase-line-5 { color: #ec4899; font-weight: 600; } /* 분홍 */
+.phrase-line-6 { color: #06b6d4; font-weight: 600; } /* 하늘색 */
+.phrase-line-7 { color: #84cc16; font-weight: 600; } /* 라임 */
+.phrase-line-8 { color: #f97316; font-weight: 600; } /* 오렌지 */
+
+/* 추천문구 호버 효과 강화 */
+.phrase-content p:hover {
+    transform: scale(1.05);
+    transition: transform 0.2s ease;
+    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
 
 .select-btn {
@@ -813,10 +832,28 @@ textarea:focus {
     gap: 2rem;
 }
 
-textarea[placeholder="선: 선하게 빛나는 당신의 눈빛
-생: 생기 넘치는 당신의 웃음  
-님: 님의 행복을 위해 내가 있을게요"] {
-    placeholder: "선: 선하게 빛나는 당신의 눈빛
-생: 생기 넘치는 당신의 웃음  
-님: 님의 행복을 위해 내가 있을게요";
+textarea[placeholder*="선: 선하게 빛나는 당신의 눈빛"] {
+    font-family: 'Noto Sans KR', sans-serif;
+    line-height: 1.6;
+}
+
+/* 캘리그라피 결과 페이지의 문구 표시 */
+.phrase-display {
+    text-align: center;
+    margin-top: 2rem;
+    padding: 1.5rem;
+    background: var(--secondary-color);
+    border-radius: 12px;
+    border: 2px solid var(--border-color);
+}
+
+.phrase-display p {
+    margin: 0.5rem 0;
+    font-size: 1.1rem;
+    transition: transform 0.2s ease;
+}
+
+.phrase-display p:hover {
+    transform: scale(1.02);
+    text-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
 } 
